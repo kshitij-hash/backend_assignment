@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import express from 'express';
 import {z} from 'zod'
+import bcrypt from 'bcryptjs'
 
 import { authenticateJwt, SECRET } from "../middleware/";
 import { User } from "../db";
@@ -27,7 +28,9 @@ router.post('/register', async (req, res) => {
     if (user) {
       res.status(403).json({ message: 'User already exists' });
     } else {
-      const newUser = new User({ name, email, password });
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const newUser = new User({ name, email, password: hashedPassword });
       await newUser.save();
       const token = jwt.sign({ id: newUser._id }, SECRET, { expiresIn: '1h' });
       res.json({ message: 'User created successfully', token });
@@ -50,11 +53,17 @@ const zodLoginInputSchema = z.object({
 router.post('/login', async (req, res) => {
   try {
     const { email, password }: loginType = zodLoginInputSchema.parse(req.body);
-    const user = await User.findOne({ email, password });
+    const user = await User.findOne({ email });
 
     if (user) {
-      const token = jwt.sign({ id: user._id }, SECRET, { expiresIn: '1h' });
-      res.json({ message: 'Logged in successfully', token });
+      const passwordMatch = user.password ? await bcrypt.compare(password, user.password) : false;
+
+      if(passwordMatch) {
+        const token = jwt.sign({ id: user._id }, SECRET, { expiresIn: '1h' });
+        res.json({ message: 'Logged in successfully', token });
+      } else {
+        res.status(403).json({ message: 'Invalid username or password' });
+      }
     } else {
       res.status(403).json({ message: 'Invalid username or password' });
     }
