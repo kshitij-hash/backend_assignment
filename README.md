@@ -41,7 +41,8 @@ You can test the APIs using tools like Postman. Here are the endpoints available
 #### Adding JWT Token in Postman
 - Add jwt token in the header with key `Authorization` and value `Bearer <token value>` in Postman.
 - The token is generated when you log in or register a user.
-![alt text](image.png)
+![Screenshot 2024-04-12 135506](https://github.com/kshitij-hash/backend_assignment/assets/83551355/cb73f97d-fd31-48b0-b932-e6a48028434b)
+
 
 #### User Endpoints
 - **POST /auth/register**: Register a new user.
